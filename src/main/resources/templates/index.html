@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>KC API Tester</title>
+    <script>
+        function addParameter() {
+            const paramsDiv = document.getElementById("params");
+            const paramDiv = document.createElement("div");
+            paramDiv.innerHTML = `
+                <input type="text" name="paramKeys" placeholder="Parameter Name" required>
+                <input type="text" name="paramValues" placeholder="Parameter Value" required>
+                <button type="button" onclick="this.parentElement.remove()">Remove</button>
+            `;
+            paramsDiv.appendChild(paramDiv);
+        }
+    </script>
+</head>
+<body>
+<h1 th:text="${message}"></h1>
+<form method="POST" action="/test-api">
+    <label for="method">HTTP Method:</label>
+    <select id="method" name="method" required>
+        <option value="GET">GET</option>
+        <option value="POST">POST</option>
+    </select>
+    <br><br>
+    <label for="baseUrl">Base URL:</label>
+    <input type="text" id="baseUrl" name="baseUrl" placeholder="Enter Base URL" required>
+    <br><br>
+    <div id="params">
+        <h3>Parameters:</h3>
+    </div>
+    <button type="button" onclick="addParameter()">Add Parameter</button>
+    <br><br>
+    <button type="submit">Send</button>
+</form>
+<div>
+    <h2>Response:</h2>
+    <p th:if="${response}" th:text="${response}"></p>
+    <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+</div>
+</body>
+</html>
