@@ -14,11 +14,16 @@
             `;
             paramsDiv.appendChild(paramDiv);
         }
+        function setFormMethod() {
+        const form = document.getElementById("apiForm");
+        const method = document.getElementById("method").value;
+        form.method = method; // Dynamically set the form's method
+    }
     </script>
 </head>
 <body>
 <h1 th:text="${message}"></h1>
-<form method="POST" action="/test-api">
+<form id="apiForm" action="/test-api" onsubmit="setFormMethod()">
     <label for="method">HTTP Method:</label>
     <select id="method" name="method" required>
         <option value="GET">GET</option>
@@ -26,7 +31,8 @@
     </select>
     <br><br>
     <label for="baseUrl">Base URL:</label>
-    <input type="text" id="baseUrl" name="baseUrl" placeholder="Enter Base URL" required>
+    <input type="text" id="baseUrl" name="baseUrl" class="url-input" placeholder="Enter Base URL" required size="60">
+
     <br><br>
     <div id="params">
         <h3>Parameters:</h3>

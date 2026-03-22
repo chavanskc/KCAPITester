@@ -22,6 +22,18 @@ public class ApiController {
         return "index";
     }
 
+    public String getCompleteUrl(String baseUrl, List<String> paramKeys, List<String> paramValues) {
+        StringBuilder urlBuilder = new StringBuilder(baseUrl);
+        if (!paramKeys.isEmpty() && paramKeys.size() == paramValues.size()) {
+            urlBuilder.append("?");
+            for (int i = 0; i < paramKeys.size(); i++) {
+                urlBuilder.append(paramKeys.get(i)).append("=").append(paramValues.get(i)).append("&");
+            }
+            urlBuilder.setLength(urlBuilder.length() - 1); // Remove trailing '&'
+        }
+        return urlBuilder.toString();
+    }
+
     @RequestMapping(value = "/test-api", method = RequestMethod.GET)
     public String handleGetRequest(
             @RequestParam String baseUrl,
@@ -39,17 +51,9 @@ public class ApiController {
 
         try {
             RestTemplate restTemplate = new RestTemplate();
-            StringBuilder urlBuilder = new StringBuilder(baseUrl);
+            String url = getCompleteUrl(baseUrl, paramKeys, paramValues);
 
-            if (!paramKeys.isEmpty() && paramKeys.size() == paramValues.size()) {
-                urlBuilder.append("?");
-                for (int i = 0; i < paramKeys.size(); i++) {
-                    urlBuilder.append(paramKeys.get(i)).append("=").append(paramValues.get(i)).append("&");
-                }
-                urlBuilder.setLength(urlBuilder.length() - 1); // Remove trailing '&'
-            }
 
-            String url = urlBuilder.toString();
             log.info("Constructed GET URL: {}", url);
 
             String response = restTemplate.getForObject(url, String.class);
@@ -84,15 +88,7 @@ public class ApiController {
             RestTemplate restTemplate = new RestTemplate();
             StringBuilder urlBuilder = new StringBuilder(baseUrl);
 
-            if (!paramKeys.isEmpty() && paramKeys.size() == paramValues.size()) {
-                urlBuilder.append("?");
-                for (int i = 0; i < paramKeys.size(); i++) {
-                    urlBuilder.append(paramKeys.get(i)).append("=").append(paramValues.get(i)).append("&");
-                }
-                urlBuilder.setLength(urlBuilder.length() - 1); // Remove trailing '&'
-            }
-
-            String url = urlBuilder.toString();
+            String url = getCompleteUrl(baseUrl, paramKeys, paramValues);
             log.info("Constructed POST URL: {}", url);
 
             String response = restTemplate.postForObject(url, null, String.class);
