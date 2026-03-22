@@ -22,28 +22,25 @@ public class ApiController {
         return "index";
     }
 
-    @RequestMapping(value = "/test-api", method = {RequestMethod.GET, RequestMethod.POST})
-    public String testApi(
-            @RequestParam String method,
+    @RequestMapping(value = "/test-api", method = RequestMethod.GET)
+    public String handleGetRequest(
             @RequestParam String baseUrl,
             @RequestParam("paramKeys") List<String> paramKeys,
             @RequestParam("paramValues") List<String> paramValues,
             Model model) {
 
-        log.info("Test API called with method: {}, baseUrl: {}, params Keys: {} , params Values: {} ", method, baseUrl, paramKeys , paramValues);
+        log.info("GET API called with baseUrl: {}, paramKeys: {}, paramValues: {}", baseUrl, paramKeys, paramValues);
 
         if (baseUrl == null || baseUrl.isEmpty()) {
             model.addAttribute("response", null);
             model.addAttribute("error", "Base URL is missing.");
             return "index";
         }
-        try {
 
+        try {
             RestTemplate restTemplate = new RestTemplate();
             StringBuilder urlBuilder = new StringBuilder(baseUrl);
-            // Append dynamic parameters to the URL
-            // create URL as below using the parameters
-            //"http://localhost:8081/calculator/add?num1=5&num2=3"
+
             if (!paramKeys.isEmpty() && paramKeys.size() == paramValues.size()) {
                 urlBuilder.append("?");
                 for (int i = 0; i < paramKeys.size(); i++) {
@@ -51,25 +48,60 @@ public class ApiController {
                 }
                 urlBuilder.setLength(urlBuilder.length() - 1); // Remove trailing '&'
             }
-            log.info("Constructed URL: {}", urlBuilder.toString());
 
             String url = urlBuilder.toString();
-            String response;
-            log.info("Constructed URL: {}", url);
+            log.info("Constructed GET URL: {}", url);
 
-            if ("GET".equalsIgnoreCase(method)) {
-                response = restTemplate.getForObject(url, String.class);
-            } else if ("POST".equalsIgnoreCase(method)) {
-                response = restTemplate.postForObject(url, null, String.class);
-            } else {
-                throw new IllegalArgumentException("Unsupported HTTP method: " + method);
-            }
+            String response = restTemplate.getForObject(url, String.class);
+            log.info("GET API call successful. Response: {}", response);
 
-            log.info("API call successful. Response: {}", response);
             model.addAttribute("response", response);
             model.addAttribute("error", null);
         } catch (Exception e) {
-            log.error("Error occurred while calling API: {}", e.getMessage(), e);
+            log.error("Error occurred while calling GET API: {}", e.getMessage(), e);
+            model.addAttribute("response", null);
+            model.addAttribute("error", "Error occurred: " + e.getMessage());
+        }
+        return "index";
+    }
+
+    @RequestMapping(value = "/test-api", method = RequestMethod.POST)
+    public String handlePostRequest(
+            @RequestParam String baseUrl,
+            @RequestParam("paramKeys") List<String> paramKeys,
+            @RequestParam("paramValues") List<String> paramValues,
+            Model model) {
+
+        log.info("POST API called with baseUrl: {}, paramKeys: {}, paramValues: {}", baseUrl, paramKeys, paramValues);
+
+        if (baseUrl == null || baseUrl.isEmpty()) {
+            model.addAttribute("response", null);
+            model.addAttribute("error", "Base URL is missing.");
+            return "index";
+        }
+
+        try {
+            RestTemplate restTemplate = new RestTemplate();
+            StringBuilder urlBuilder = new StringBuilder(baseUrl);
+
+            if (!paramKeys.isEmpty() && paramKeys.size() == paramValues.size()) {
+                urlBuilder.append("?");
+                for (int i = 0; i < paramKeys.size(); i++) {
+                    urlBuilder.append(paramKeys.get(i)).append("=").append(paramValues.get(i)).append("&");
+                }
+                urlBuilder.setLength(urlBuilder.length() - 1); // Remove trailing '&'
+            }
+
+            String url = urlBuilder.toString();
+            log.info("Constructed POST URL: {}", url);
+
+            String response = restTemplate.postForObject(url, null, String.class);
+            log.info("POST API call successful. Response: {}", response);
+
+            model.addAttribute("response", response);
+            model.addAttribute("error", null);
+        } catch (Exception e) {
+            log.error("Error occurred while calling POST API: {}", e.getMessage(), e);
             model.addAttribute("response", null);
             model.addAttribute("error", "Error occurred: " + e.getMessage());
         }
