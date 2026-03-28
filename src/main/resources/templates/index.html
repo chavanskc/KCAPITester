@@ -3,7 +3,46 @@
 <head>
     <meta charset="UTF-8">
     <title>KC API Tester</title>
+    <style>
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            background-color: #f9f9f9;
+        }
+
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+        }
+
+        .tab-content {
+            border: 1px solid #ccc;
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+    </style>
     <script>
+        function switchTab(tabId) {
+            const tabs = document.querySelectorAll(".tab");
+            const contents = document.querySelectorAll(".tab-content");
+
+            tabs.forEach(tab => tab.classList.remove("active"));
+            contents.forEach(content => content.classList.remove("active"));
+
+            document.getElementById(tabId).classList.add("active");
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
+
+            // Set input type based on the selected tab
+            document.getElementById("inputType").value = tabId === "tab1" ? "parameters" : "json";
+        }
+
         function addParameter() {
             const paramsDiv = document.getElementById("params");
             const paramDiv = document.createElement("div");
@@ -14,16 +53,111 @@
             `;
             paramsDiv.appendChild(paramDiv);
         }
-        function setFormMethod() {
-        const form = document.getElementById("apiForm");
-        const method = document.getElementById("method").value;
-        form.method = method; // Dynamically set the form's method
+
+       function prepareForm(event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const inputType = document.getElementById("inputType").value;
+    const baseUrl = document.getElementById("baseUrl").value;
+
+    if (!baseUrl) {
+        document.getElementById("error").innerText = "Base URL is required.";
+        return;
     }
+
+    if (inputType === "json") {
+        handleJsonSubmission(baseUrl);
+    } else if (inputType === "parameters") {
+        handleParameterSubmission(baseUrl);
+    }
+}
+
+function handleJsonSubmission(baseUrl) {
+    const jsonInput = document.getElementById("jsonInput").value;
+
+    let jsonPayload;
+    try {
+        jsonPayload = JSON.parse(jsonInput); // Parse JSON input
+    } catch (e) {
+        document.getElementById("error").innerText = "Invalid JSON format.";
+        return;
+    }
+
+    jsonPayload.baseUrl = baseUrl;
+
+    fetch("/test-api", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(jsonPayload)
+    })
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("response").innerText = data;
+            document.getElementById("error").innerText = "";
+            alert("API call successful! Check the response below." , response);
+        })
+        .catch(error => {
+            document.getElementById("response").innerText = "";
+            document.getElementById("error").innerText = `Error: ${error}`;
+        });
+}
+
+function handleParameterSubmission(baseUrl) {
+    const params = document.querySelectorAll("#params div");
+    const formData = new URLSearchParams();
+
+    formData.append("baseUrl", baseUrl);
+
+    params.forEach(param => {
+        const key = param.querySelector("input[name='paramKeys']").value;
+        const value = param.querySelector("input[name='paramValues']").value;
+        // Resolve environment variables in the value
+        let value = resolveEnvVariables(value);
+
+        if (key && value) {
+            formData.append("paramKeys", key);
+            formData.append("paramValues", value);
+        }
+    });
+
+    fetch("/test-api", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/x-www-form-urlencoded"
+        },
+        body: formData.toString()
+    })
+        .then(response => response.text())
+        .then(data => {
+            document.getElementById("response").innerText = data;
+            document.getElementById("error").innerText = "";
+            alert("API call successful! Check the response below." , response);
+        })
+        .catch(error => {
+            document.getElementById("response").innerText = "";
+            document.getElementById("error").innerText = `Error: ${error}`;
+        });
+       const envVariables = new Map();
+
+    }
+    function addEnvVariable() {
+        const envVarsDiv = document.getElementById("envVars");
+        const envVarDiv = document.createElement("div");
+        envVarDiv.innerHTML = `
+            <input type="text" name="envKeys" placeholder="Variable Name" required>
+            <input type="text" name="envValues" placeholder="Variable Value" required>
+            <button type="button" onclick="this.parentElement.remove()">Remove</button>
+        `;
+        envVarsDiv.appendChild(envVarDiv);
+    }
+
     </script>
 </head>
 <body>
 <h1 th:text="${message}"></h1>
-<form id="apiForm" action="/test-api" onsubmit="setFormMethod()">
+<form id="apiForm" action="/test-api" method="POST" onsubmit="prepareForm(event)">
     <label for="method">HTTP Method:</label>
     <select id="method" name="method" required>
         <option value="GET">GET</option>
@@ -32,19 +166,43 @@
     <br><br>
     <label for="baseUrl">Base URL:</label>
     <input type="text" id="baseUrl" name="baseUrl" class="url-input" placeholder="Enter Base URL" required size="60">
-
     <br><br>
-    <div id="params">
-        <h3>Parameters:</h3>
+
+    <input type="hidden" id="inputType" name="inputType" value="parameters">
+
+    <div>
+        <div class="tab active" id="tab1" onclick="switchTab('tab1')">Parameters</div>
+        <div class="tab" id="tab2" onclick="switchTab('tab2')">JSON</div>
+        <div class="tab" id="tab3" onclick="switchTab('tab3')">Environment Variables</div>
     </div>
-    <button type="button" onclick="addParameter()">Add Parameter</button>
+
+    <div class="tab-content active" data-tab="tab1">
+        <div id="params">
+            <h3>Parameters:</h3>
+        </div>
+        <button type="button" onclick="addParameter()">Add Parameter</button>
+    </div>
+
+    <div class="tab-content" data-tab="tab2">
+        <label for="jsonInput">JSON Input:</label>
+        <textarea id="jsonInput" name="jsonInput" rows="10" cols="80" placeholder="Enter JSON here..."></textarea>
+    </div>
+    <div class="tab-content" data-tab="tab3">
+        <h3>Environment Variables:</h3>
+        <div id="envVars"></div>
+        <button type="button" onclick="addEnvVariable()">Add Variable</button>
+    </div>
+
+
+
     <br><br>
     <button type="submit">Send</button>
 </form>
 <div>
     <h2>Response:</h2>
-    <p th:if="${response}" th:text="${response}"></p>
-    <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+    <pre id="response"></pre>
+    <p id="error" style="color: red;"></p>
 </div>
+
 </body>
 </html>
