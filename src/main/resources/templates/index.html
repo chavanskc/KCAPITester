@@ -2,33 +2,447 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>KC API Tester</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 4px solid #555ab8;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .header p {
+            font-size: 0.95em;
+            opacity: 0.95;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        /* Form Styling */
+        .form-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        select, input[type="text"], textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        select:focus, input[type="text"]:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 150px;
+        }
+
+        /* Method Selector */
+        .method-selector {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .method-selector select {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* Tabs Styling */
+        .tabs-container {
+            margin-bottom: 25px;
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            background: #f0f0f0;
+            padding: 5px;
+            border-radius: 8px;
+            border-bottom: none;
+        }
+
         .tab {
             display: inline-block;
-            padding: 10px 20px;
+            padding: 12px 24px;
             cursor: pointer;
-            border: 1px solid #ccc;
-            border-bottom: none;
-            background-color: #f9f9f9;
+            border: none;
+            background-color: #e8e8e8;
+            color: #555;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+        }
+
+        .tab:hover {
+            background-color: #d0d0d0;
+            transform: translateY(-2px);
         }
 
         .tab.active {
-            background-color: #fff;
-            border-bottom: 1px solid #fff;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
         }
 
         .tab-content {
-            border: 1px solid #ccc;
-            padding: 20px;
+            border: 2px solid #e0e0e0;
+            padding: 25px;
             display: none;
+            border-radius: 8px;
+            background: #fff;
+            animation: fadeIn 0.3s ease;
         }
 
         .tab-content.active {
             display: block;
         }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .tab-content h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        /* Parameters Styling */
+        #params {
+            margin-bottom: 20px;
+        }
+
+        #params div {
+            display: grid;
+            grid-template-columns: 1fr 1fr auto;
+            gap: 10px;
+            margin-bottom: 12px;
+            padding: 12px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border: 1px solid #e0e0e0;
+            align-items: center;
+        }
+
+        #params input {
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        #params button {
+            padding: 8px 16px;
+            background-color: #ff6b6b;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        #params button:hover {
+            background-color: #ff5252;
+            transform: scale(1.05);
+        }
+
+        /* Environment Variables */
+        .env-layout {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 16px;
+        }
+
+        .env-form-card,
+        .env-list-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            background: #f9f9fb;
+            padding: 14px;
+        }
+
+        .env-form-card h4,
+        .env-list-card h4 {
+            margin-bottom: 10px;
+            color: #4a4f9e;
+        }
+
+        .env-form-card input {
+            margin-bottom: 10px;
+        }
+
+        .env-actions,
+        .env-item-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .env-actions button,
+        .env-item-actions button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            color: #fff;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.85em;
+        }
+
+        .env-actions .btn-primary,
+        .env-item-actions .btn-edit {
+            background: #667eea;
+        }
+
+        .env-actions .btn-secondary {
+            background: #8892a6;
+        }
+
+        .env-item-actions .btn-remove {
+            background: #e45757;
+        }
+
+        .env-item {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 10px;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #dcdff5;
+            border-radius: 6px;
+            background: #fff;
+            margin-bottom: 8px;
+        }
+
+        .env-item.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.15);
+        }
+
+        .env-item-key {
+            font-weight: 700;
+            color: #2f356f;
+            margin-bottom: 3px;
+        }
+
+        .env-item-value {
+            color: #444;
+            word-break: break-word;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .env-empty {
+            color: #666;
+            font-size: 0.9em;
+            padding: 8px 4px;
+        }
+
+        /* Buttons */
+        button[type="button"]:not(#params button):not(.env-item-actions button):not(.env-actions button) {
+            padding: 12px 24px;
+            background-color: #667eea;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95em;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        button[type="button"]:not(#params button):not(.env-item-actions button):not(.env-actions button):hover {
+            background-color: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        button[type="submit"] {
+            padding: 14px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1.05em;
+            width: 100%;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        /* Response Section */
+        .response-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border-left: 5px solid #51cf66;
+            margin-top: 30px;
+        }
+
+        .response-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #51cf66;
+            padding-bottom: 10px;
+        }
+
+        #response {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-size: 0.9em;
+            color: #333;
+            font-family: 'Courier New', monospace;
+            line-height: 1.5;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        #error {
+            color: #ff6b6b;
+            padding: 12px;
+            background: #ffe0e0;
+            border: 1px solid #ffb3b3;
+            border-radius: 6px;
+            font-weight: 600;
+            display: none;
+        }
+
+        #error:not(:empty) {
+            display: block;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 0;
+                border-radius: 0;
+            }
+
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .tabs {
+                flex-direction: column;
+            }
+
+            .tab {
+                width: 100%;
+                text-align: center;
+            }
+
+            #params div {
+                grid-template-columns: 1fr;
+            }
+
+            .env-layout {
+                grid-template-columns: 1fr;
+            }
+
+            .method-selector {
+                flex-direction: column;
+            }
+
+            .method-selector select {
+                min-width: 100%;
+            }
+        }
     </style>
     <script>
+        const envVariables = new Map();
+        const PLACEHOLDER_PATTERN = /\{\{([^{}]+)}}/g;
+        let selectedEnvKey = null;
+
         function switchTab(tabId) {
             const tabs = document.querySelectorAll(".tab");
             const contents = document.querySelectorAll(".tab-content");
@@ -39,169 +453,488 @@
             document.getElementById(tabId).classList.add("active");
             document.querySelector(`[data-tab="${tabId}"]`).classList.add("active");
 
-            // Set input type based on the selected tab
-            document.getElementById("inputType").value = tabId === "tab1" ? "parameters" : "json";
+            if (tabId === "tab1") {
+                document.getElementById("inputType").value = "parameters";
+            } else if (tabId === "tab2") {
+                document.getElementById("inputType").value = "json";
+            } else {
+                document.getElementById("inputType").value = "env";
+            }
+
+            updateRequestControlsVisibility(tabId);
+        }
+
+        function updateRequestControlsVisibility(tabId) {
+            const isEnvTab = tabId === "tab3";
+            const methodSection = document.getElementById("methodSection");
+            const baseUrlSection = document.getElementById("baseUrlSection");
+            const submitSection = document.getElementById("submitSection");
+            const baseUrlInput = document.getElementById("baseUrl");
+            const methodInput = document.getElementById("method");
+
+            methodSection.style.display = isEnvTab ? "none" : "block";
+            baseUrlSection.style.display = isEnvTab ? "none" : "block";
+            submitSection.style.display = isEnvTab ? "none" : "block";
+            methodInput.required = !isEnvTab;
+            baseUrlInput.required = !isEnvTab;
         }
 
         function addParameter() {
             const paramsDiv = document.getElementById("params");
+            paramsDiv.appendChild(createParameterRow("", ""));
+        }
+
+        function createParameterRow(key, value) {
             const paramDiv = document.createElement("div");
-            paramDiv.innerHTML = `
-                <input type="text" name="paramKeys" placeholder="Parameter Name" required>
-                <input type="text" name="paramValues" placeholder="Parameter Value" required>
-                <button type="button" onclick="this.parentElement.remove()">Remove</button>
-            `;
-            paramsDiv.appendChild(paramDiv);
+            const keyInput = document.createElement("input");
+            keyInput.type = "text";
+            keyInput.name = "paramKeys";
+            keyInput.placeholder = "Parameter Name";
+            keyInput.value = key;
+            keyInput.required = true;
+
+            const valueInput = document.createElement("input");
+            valueInput.type = "text";
+            valueInput.name = "paramValues";
+            valueInput.placeholder = "Parameter Value (supports {{KEY}})";
+            valueInput.value = value;
+            valueInput.required = true;
+
+            const removeButton = document.createElement("button");
+            removeButton.type = "button";
+            removeButton.innerText = "Remove";
+            removeButton.onclick = () => paramDiv.remove();
+
+            paramDiv.appendChild(keyInput);
+            paramDiv.appendChild(valueInput);
+            paramDiv.appendChild(removeButton);
+            return paramDiv;
         }
 
-       function prepareForm(event) {
-    event.preventDefault(); // Prevent default form submission
-
-    const inputType = document.getElementById("inputType").value;
-    const baseUrl = document.getElementById("baseUrl").value;
-
-    if (!baseUrl) {
-        document.getElementById("error").innerText = "Base URL is required.";
-        return;
-    }
-
-    if (inputType === "json") {
-        handleJsonSubmission(baseUrl);
-    } else if (inputType === "parameters") {
-        handleParameterSubmission(baseUrl);
-    }
-}
-
-function handleJsonSubmission(baseUrl) {
-    const jsonInput = document.getElementById("jsonInput").value;
-
-    let jsonPayload;
-    try {
-        jsonPayload = JSON.parse(jsonInput); // Parse JSON input
-    } catch (e) {
-        document.getElementById("error").innerText = "Invalid JSON format.";
-        return;
-    }
-
-    jsonPayload.baseUrl = baseUrl;
-
-    fetch("/test-api", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(jsonPayload)
-    })
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById("response").innerText = data;
-            document.getElementById("error").innerText = "";
-            alert("API call successful! Check the response below." , response);
-        })
-        .catch(error => {
-            document.getElementById("response").innerText = "";
-            document.getElementById("error").innerText = `Error: ${error}`;
-        });
-}
-
-function handleParameterSubmission(baseUrl) {
-    const params = document.querySelectorAll("#params div");
-    const formData = new URLSearchParams();
-
-    formData.append("baseUrl", baseUrl);
-
-    params.forEach(param => {
-        const key = param.querySelector("input[name='paramKeys']").value;
-        const value = param.querySelector("input[name='paramValues']").value;
-        // Resolve environment variables in the value
-        let value = resolveEnvVariables(value);
-
-        if (key && value) {
-            formData.append("paramKeys", key);
-            formData.append("paramValues", value);
+        function addEnvVariable() {
+            resetEnvForm();
         }
-    });
 
-    fetch("/test-api", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
-        },
-        body: formData.toString()
-    })
-        .then(response => response.text())
-        .then(data => {
-            document.getElementById("response").innerText = data;
+        function setEnvFormMode(isEdit) {
+            document.getElementById("envFormTitle").innerText = isEdit ? "Edit Environment Variable" : "Add Environment Variable";
+            document.getElementById("envSaveButton").innerText = isEdit ? "Update" : "Add";
+        }
+
+        function resetEnvForm() {
+            selectedEnvKey = null;
+            document.getElementById("envKeyInput").value = "";
+            document.getElementById("envValueInput").value = "";
+            setEnvFormMode(false);
+            renderEnvVariablesList();
+        }
+
+        function editEnvVariable(key) {
+            if (!envVariables.has(key)) {
+                return;
+            }
+
+            selectedEnvKey = key;
+            document.getElementById("envKeyInput").value = key;
+            document.getElementById("envValueInput").value = envVariables.get(key);
+            setEnvFormMode(true);
+            renderEnvVariablesList();
+        }
+
+        async function saveEnvVariable() {
+            const keyInput = document.getElementById("envKeyInput").value.trim();
+            const valueInput = document.getElementById("envValueInput").value;
+
+            if (!keyInput) {
+                alert("Environment key is required.");
+                return;
+            }
+
+            if (keyInput.includes("#")) {
+                alert("Environment key cannot contain #.");
+                return;
+            }
+
+            if (!selectedEnvKey && envVariables.has(keyInput)) {
+                alert("Key already exists. Please edit the existing key.");
+                return;
+            }
+
+            if (selectedEnvKey && selectedEnvKey !== keyInput && envVariables.has(keyInput)) {
+                alert("Cannot rename to an existing key.");
+                return;
+            }
+
+            if (selectedEnvKey && selectedEnvKey !== keyInput) {
+                envVariables.delete(selectedEnvKey);
+            }
+
+            envVariables.set(keyInput, valueInput);
+            await syncEnvVariablesToServer();
+            resetEnvForm();
+        }
+
+        async function removeEnvVariable(key) {
+            if (!envVariables.has(key)) {
+                return;
+            }
+
+            const confirmed = confirm("Remove environment variable: " + key + "?");
+            if (!confirmed) {
+                return;
+            }
+
+            envVariables.delete(key);
+            if (selectedEnvKey === key) {
+                selectedEnvKey = null;
+                setEnvFormMode(false);
+                document.getElementById("envKeyInput").value = "";
+                document.getElementById("envValueInput").value = "";
+            }
+
+            await syncEnvVariablesToServer();
+            renderEnvVariablesList();
+        }
+
+        function renderEnvVariablesList() {
+            const envList = document.getElementById("envVarsList");
+            envList.innerHTML = "";
+
+            if (envVariables.size === 0) {
+                const empty = document.createElement("div");
+                empty.className = "env-empty";
+                empty.innerText = "No environment variables added yet.";
+                envList.appendChild(empty);
+                return;
+            }
+
+            Array.from(envVariables.entries())
+                .sort((a, b) => a[0].localeCompare(b[0]))
+                .forEach(([key, value]) => {
+                    const row = document.createElement("div");
+                    row.className = "env-item" + (selectedEnvKey === key ? " selected" : "");
+
+                    const info = document.createElement("div");
+                    const keyDiv = document.createElement("div");
+                    keyDiv.className = "env-item-key";
+                    keyDiv.innerText = key;
+
+                    const valueDiv = document.createElement("div");
+                    valueDiv.className = "env-item-value";
+                    valueDiv.innerText = value;
+
+                    info.appendChild(keyDiv);
+                    info.appendChild(valueDiv);
+
+                    const actions = document.createElement("div");
+                    actions.className = "env-item-actions";
+
+                    const editButton = document.createElement("button");
+                    editButton.type = "button";
+                    editButton.className = "btn-edit";
+                    editButton.innerText = "Edit";
+                    editButton.onclick = () => editEnvVariable(key);
+
+                    const removeButton = document.createElement("button");
+                    removeButton.type = "button";
+                    removeButton.className = "btn-remove";
+                    removeButton.innerText = "Remove";
+                    removeButton.onclick = () => removeEnvVariable(key);
+
+                    actions.appendChild(editButton);
+                    actions.appendChild(removeButton);
+
+                    row.appendChild(info);
+                    row.appendChild(actions);
+                    envList.appendChild(row);
+                });
+        }
+
+        async function loadEnvVariables() {
+            try {
+                const response = await fetch("/env-vars");
+                if (!response.ok) {
+                    throw new Error("Unable to load env variables.");
+                }
+
+                const payload = await response.json();
+                envVariables.clear();
+
+                Object.entries(payload).forEach(([key, value]) => {
+                    envVariables.set(key, value);
+                });
+                resetEnvForm();
+            } catch (error) {
+                document.getElementById("error").innerText = "Unable to load environment variables.";
+            }
+        }
+
+        async function syncEnvVariablesToServer() {
+            const payload = Object.fromEntries(envVariables.entries());
+            try {
+                const response = await fetch("/env-vars", {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorBody = await response.json();
+                    throw new Error(errorBody.message || "Unable to save environment variables.");
+                }
+                document.getElementById("error").innerText = "";
+            } catch (error) {
+                document.getElementById("error").innerText = error.message;
+            }
+        }
+
+        function resolvePlaceholders(text, missingKeys) {
+            if (!text) {
+                return text;
+            }
+
+            return text.replace(PLACEHOLDER_PATTERN, (match, key) => {
+                const normalized = key.trim();
+                if (!envVariables.has(normalized)) {
+                    missingKeys.add(normalized);
+                    return match;
+                }
+                return envVariables.get(normalized);
+            });
+        }
+
+        function showMissingKeys(missingKeys) {
+            const missingList = Array.from(missingKeys).join(", ");
+            const message = "Missing environment variable(s): " + missingList;
+            document.getElementById("error").innerText = message;
+            alert(message);
+        }
+
+        function prepareForm(event) {
+            event.preventDefault();
             document.getElementById("error").innerText = "";
-            alert("API call successful! Check the response below." , response);
-        })
-        .catch(error => {
-            document.getElementById("response").innerText = "";
-            document.getElementById("error").innerText = `Error: ${error}`;
+
+            const inputType = document.getElementById("inputType").value;
+            const method = document.getElementById("method").value;
+            const baseUrl = document.getElementById("baseUrl").value;
+
+            if (!baseUrl) {
+                document.getElementById("error").innerText = "Base URL is required.";
+                return;
+            }
+
+
+            if (inputType === "json") {
+                handleJsonSubmission(baseUrl);
+                return;
+            }
+
+            if (inputType === "parameters") {
+                handleParameterSubmission(method, baseUrl);
+            }
+        }
+
+        function handleJsonSubmission(baseUrl) {
+            const missingKeys = new Set();
+            const resolvedBaseUrl = resolvePlaceholders(baseUrl, missingKeys);
+            const jsonInput = document.getElementById("jsonInput").value;
+
+            if (!jsonInput || jsonInput.trim() === "") {
+                document.getElementById("error").innerText = "JSON input is required.";
+                return;
+            }
+
+            const resolvedJsonText = resolvePlaceholders(jsonInput, missingKeys);
+            if (missingKeys.size > 0) {
+                showMissingKeys(missingKeys);
+                return;
+            }
+
+            let jsonPayload;
+            try {
+                jsonPayload = JSON.parse(resolvedJsonText);
+            } catch (e) {
+                document.getElementById("error").innerText = "Invalid JSON format: " + e.message;
+                return;
+            }
+
+            jsonPayload.baseUrl = resolvedBaseUrl;
+
+            fetch("/test-api", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(jsonPayload)
+            })
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("response").innerText = data;
+                    document.getElementById("error").innerText = "";
+                })
+                .catch(error => {
+                    document.getElementById("response").innerText = "";
+                    document.getElementById("error").innerText = "Error: " + error;
+                });
+        }
+
+        function handleParameterSubmission(method, baseUrl) {
+            const params = document.querySelectorAll("#params div");
+            const missingKeys = new Set();
+            const formData = new URLSearchParams();
+
+            formData.append("baseUrl", resolvePlaceholders(baseUrl, missingKeys));
+
+            params.forEach(param => {
+                const keyInput = param.querySelector("input[name='paramKeys']");
+                const valueInput = param.querySelector("input[name='paramValues']");
+                if (!keyInput || !valueInput) {
+                    return;
+                }
+
+                const resolvedKey = resolvePlaceholders(keyInput.value, missingKeys);
+                const resolvedValue = resolvePlaceholders(valueInput.value, missingKeys);
+                if (resolvedKey && resolvedValue) {
+                    formData.append("paramKeys", resolvedKey);
+                    formData.append("paramValues", resolvedValue);
+                }
+            });
+
+            if (missingKeys.size > 0) {
+                showMissingKeys(missingKeys);
+                return;
+            }
+
+            const requestOptions = method === "GET"
+                ? {
+                    url: "/test-api?" + formData.toString(),
+                    options: { method: "GET" }
+                }
+                : {
+                    url: "/test-api",
+                    options: {
+                        method: "POST",
+                        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                        body: formData.toString()
+                    }
+                };
+
+            fetch(requestOptions.url, requestOptions.options)
+                .then(response => response.text())
+                .then(data => {
+                    document.getElementById("response").innerText = data;
+                    document.getElementById("error").innerText = "";
+                })
+                .catch(error => {
+                    document.getElementById("response").innerText = "";
+                    document.getElementById("error").innerText = "Error: " + error;
+                });
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadEnvVariables();
+            if (document.querySelectorAll("#params div").length === 0) {
+                addParameter();
+            }
+            updateRequestControlsVisibility("tab1");
         });
-       const envVariables = new Map();
-
-    }
-    function addEnvVariable() {
-        const envVarsDiv = document.getElementById("envVars");
-        const envVarDiv = document.createElement("div");
-        envVarDiv.innerHTML = `
-            <input type="text" name="envKeys" placeholder="Variable Name" required>
-            <input type="text" name="envValues" placeholder="Variable Value" required>
-            <button type="button" onclick="this.parentElement.remove()">Remove</button>
-        `;
-        envVarsDiv.appendChild(envVarDiv);
-    }
-
     </script>
 </head>
 <body>
-<h1 th:text="${message}"></h1>
-<form id="apiForm" action="/test-api" method="POST" onsubmit="prepareForm(event)">
-    <label for="method">HTTP Method:</label>
-    <select id="method" name="method" required>
-        <option value="GET">GET</option>
-        <option value="POST">POST</option>
-    </select>
-    <br><br>
-    <label for="baseUrl">Base URL:</label>
-    <input type="text" id="baseUrl" name="baseUrl" class="url-input" placeholder="Enter Base URL" required size="60">
-    <br><br>
-
-    <input type="hidden" id="inputType" name="inputType" value="parameters">
-
-    <div>
-        <div class="tab active" id="tab1" onclick="switchTab('tab1')">Parameters</div>
-        <div class="tab" id="tab2" onclick="switchTab('tab2')">JSON</div>
-        <div class="tab" id="tab3" onclick="switchTab('tab3')">Environment Variables</div>
+<div class="container">
+    <!-- Header Section -->
+    <div class="header">
+        <h1>KC API Tester</h1>
+        <p>Test and debug your API endpoints with ease</p>
     </div>
 
-    <div class="tab-content active" data-tab="tab1">
-        <div id="params">
-            <h3>Parameters:</h3>
+    <!-- Main Content -->
+    <div class="content">
+        <!-- API Form Section -->
+        <form id="apiForm" action="/test-api" method="POST" onsubmit="prepareForm(event)">
+
+            <!-- Method Selection -->
+            <div class="form-section" id="methodSection">
+                <div class="form-group">
+                    <label for="method">HTTP Method:</label>
+                    <div class="method-selector">
+                        <select id="method" name="method" required>
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Base URL Section -->
+            <div class="form-section" id="baseUrlSection">
+                <div class="form-group">
+                    <label for="baseUrl">Base URL:</label>
+                    <input type="text" id="baseUrl" name="baseUrl" placeholder="Enter Base URL (e.g., https://api.example.com/endpoint)" required size="60">
+                </div>
+            </div>
+
+            <!-- Input Type Hidden Field -->
+            <input type="hidden" id="inputType" name="inputType" value="parameters">
+
+            <!-- Tabs Section -->
+            <div class="tabs-container">
+                <div class="tabs">
+                    <div class="tab active" id="tab1" onclick="switchTab('tab1')">📋 Parameters</div>
+                    <div class="tab" id="tab2" onclick="switchTab('tab2')">📄 JSON</div>
+                    <div class="tab" id="tab3" onclick="switchTab('tab3')">🔧 Environment Variables</div>
+                </div>
+
+                <!-- Parameters Tab -->
+                <div class="tab-content active" data-tab="tab1">
+                    <h3>Request Parameters</h3>
+                    <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">Add key-value pairs to be sent with your request</p>
+                    <div id="params"></div>
+                    <button type="button" onclick="addParameter()">+ Add Parameter</button>
+                </div>
+
+                <!-- JSON Tab -->
+                <div class="tab-content" data-tab="tab2">
+                    <h3>JSON Payload</h3>
+                    <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">Enter your JSON payload here</p>
+                    <label for="jsonInput">JSON Input:</label>
+                    <textarea id="jsonInput" name="jsonInput" placeholder="Enter valid JSON here...&#10;Example: { &quot;key&quot;: &quot;value&quot;, &quot;number&quot;: 123 }"></textarea>
+                </div>
+
+                <!-- Environment Variables Tab -->
+                <div class="tab-content" data-tab="tab3">
+                    <h3>Environment Variables</h3>
+                    <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">Use one form to add or edit, and manage saved keys from the list.</p>
+                    <div class="env-layout">
+                        <div class="env-form-card">
+                            <h4 id="envFormTitle">Add Environment Variable</h4>
+                            <label for="envKeyInput">Key</label>
+                            <input id="envKeyInput" type="text" placeholder="Example: API_TOKEN">
+                            <label for="envValueInput">Value</label>
+                            <input id="envValueInput" type="text" placeholder="Example: abc123">
+                            <div class="env-actions">
+                                <button id="envSaveButton" class="btn-primary" type="button" onclick="saveEnvVariable()">Add</button>
+                                <button class="btn-secondary" type="button" onclick="resetEnvForm()">Clear</button>
+                            </div>
+                        </div>
+                        <div class="env-list-card">
+                            <h4>Saved Variables</h4>
+                            <div id="envVarsList"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div id="submitSection">
+                <button type="submit">🚀 Send Request</button>
+            </div>
+        </form>
+
+        <!-- Response Section -->
+        <div class="response-section">
+            <h2>Response:</h2>
+            <pre id="response"></pre>
+            <p id="error"></p>
         </div>
-        <button type="button" onclick="addParameter()">Add Parameter</button>
     </div>
-
-    <div class="tab-content" data-tab="tab2">
-        <label for="jsonInput">JSON Input:</label>
-        <textarea id="jsonInput" name="jsonInput" rows="10" cols="80" placeholder="Enter JSON here..."></textarea>
-    </div>
-    <div class="tab-content" data-tab="tab3">
-        <h3>Environment Variables:</h3>
-        <div id="envVars"></div>
-        <button type="button" onclick="addEnvVariable()">Add Variable</button>
-    </div>
-
-
-
-    <br><br>
-    <button type="submit">Send</button>
-</form>
-<div>
-    <h2>Response:</h2>
-    <pre id="response"></pre>
-    <p id="error" style="color: red;"></p>
 </div>
 
 </body>
